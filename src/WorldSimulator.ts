@@ -36,9 +36,11 @@ export class WorldSimulator {
       solarConstant: partial.solarConstant ?? 1361,
       orbitalTilt: partial.orbitalTilt ?? 23.5,
       rotationPeriod: partial.rotationPeriod ?? 24,
+      orbitalPeriod: partial.orbitalPeriod ?? 365,
       seaLevel: partial.seaLevel ?? 0.5,
       atmosphereDensity: partial.atmosphereDensity ?? 1.0,
       gridResolution: partial.gridResolution ?? 4,
+      timeOfDay: partial.timeOfDay ?? 12,
     };
   }
 
@@ -73,6 +75,7 @@ export class WorldSimulator {
 
       const climate = this.climateSimulator.calculateClimate(
         cell.latitude,
+        cell.longitude,
         elevation * 10000,
         distanceToOcean
       );
@@ -92,10 +95,124 @@ export class WorldSimulator {
         precipitation: climate.precipitation,
         biome,
         isOcean,
+        windSpeed: 0, // Will be calculated in second pass
+        windDirection: 0, // Will be calculated in second pass
       });
     }
 
+    // Second pass: calculate wind based on temperature and pressure gradients
+    console.log('Calculating winds...');
+    for (const cell of cells) {
+      const cellData = this.worldCells.get(cell.cellId);
+      if (!cellData) continue;
+
+      const { windSpeed, windDirection } = this.calculateWind(
+        cell.cellId,
+        cell.latitude,
+        cell.longitude,
+        cellData.temperature,
+        cellData.elevation,
+        cells
+      );
+
+      cellData.windSpeed = windSpeed;
+      cellData.windDirection = windDirection;
+    }
+
     console.log('World generation complete!');
+  }
+
+  private calculateWind(
+    cellId: string,
+    latitude: number,
+    longitude: number,
+    temperature: number,
+    elevation: number,
+    allCells: any[]
+  ): { windSpeed: number; windDirection: number } {
+    // Get neighboring cells to calculate temperature gradient
+    const neighbors = allCells.filter(other => {
+      const dist = this.haversineDistance(
+        latitude,
+        longitude,
+        other.latitude,
+        other.longitude
+      );
+      return dist > 0 && dist < 500; // Within 500km
+    }).slice(0, 8); // Max 8 neighbors
+
+    if (neighbors.length === 0) {
+      return { windSpeed: 5, windDirection: 90 };
+    }
+
+    // Calculate temperature gradient (pressure gradient)
+    let gradientNS = 0; // North-South component
+    let gradientEW = 0; // East-West component
+
+    for (const neighbor of neighbors) {
+      const neighborData = this.worldCells.get(neighbor.cellId);
+      if (!neighborData) continue;
+
+      const tempDiff = temperature - neighborData.temperature;
+      const latDiff = latitude - neighbor.latitude;
+      const lngDiff = longitude - neighbor.longitude;
+
+      // Pressure gradient is proportional to temperature gradient
+      // Wind flows from high pressure (cold) to low pressure (hot)
+      gradientNS += tempDiff * Math.sign(latDiff);
+      gradientEW += tempDiff * Math.sign(lngDiff);
+    }
+
+    gradientNS /= neighbors.length;
+    gradientEW /= neighbors.length;
+
+    // Calculate Coriolis effect based on rotation rate
+    // Coriolis parameter: f = 2 * Omega * sin(latitude)
+    const omega = (2 * Math.PI) / this.params.rotationPeriod; // rad/hour
+    const latRad = (latitude * Math.PI) / 180;
+    const coriolisParameter = 2 * omega * Math.sin(latRad);
+
+    // For rotating planets, apply Coriolis deflection
+    // In Northern hemisphere, deflects to the right; Southern, to the left
+    let windEW = gradientEW;
+    let windNS = gradientNS;
+
+    if (this.params.rotationPeriod < 1000) { // Only if not tidally locked
+      // Apply Coriolis deflection (simplified)
+      const coriolisStrength = Math.abs(coriolisParameter) * 100;
+      windEW += coriolisStrength * Math.sign(latitude) * windNS;
+      windNS -= coriolisStrength * Math.sign(latitude) * windEW * 0.5;
+    }
+
+    // Base atmospheric circulation (trade winds, westerlies, etc.)
+    const absLat = Math.abs(latitude);
+    let baseWindEW = 0;
+
+    if (absLat < 30) {
+      // Trade winds: easterly (from east to west)
+      baseWindEW = -3;
+    } else if (absLat < 60) {
+      // Westerlies: westerly (from west to east)
+      baseWindEW = 5;
+    } else {
+      // Polar easterlies: easterly
+      baseWindEW = -2;
+    }
+
+    // Combine gradient wind with base circulation
+    windEW += baseWindEW;
+
+    // Topographic effects: elevation increases wind speed
+    const elevationFactor = 1 + Math.max(0, (elevation - this.params.seaLevel) / 10000) * 0.5;
+
+    // Calculate final wind speed and direction
+    const windSpeed = Math.sqrt(windEW * windEW + windNS * windNS) * elevationFactor;
+    const windDirection = (Math.atan2(windEW, windNS) * 180 / Math.PI + 360) % 360;
+
+    return {
+      windSpeed: Math.max(1, Math.min(50, windSpeed)), // Clamp between 1-50 m/s
+      windDirection
+    };
   }
 
   private estimateDistanceToOcean(cellId: string, allCells: any[]): number {
