@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import open from 'open';
 import { WorldSimulator } from './WorldSimulator';
 import { BiomeType } from './types';
 
@@ -186,10 +187,18 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  const url = `http://localhost:${PORT}`;
   console.log('\n╔════════════════════════════════════════════╗');
   console.log('║    🌍  WORLD SIMULATOR VIEWER  🪐         ║');
   console.log('╚════════════════════════════════════════════╝\n');
-  console.log(`Server running at http://localhost:${PORT}`);
-  console.log('\nOpen your browser to visualize generated worlds!\n');
+  console.log(`Server running at ${url}`);
+  console.log('\nOpening browser...\n');
+
+  try {
+    await open(url);
+  } catch (error) {
+    console.log('Could not automatically open browser.');
+    console.log(`Please manually open: ${url}\n`);
+  }
 });
