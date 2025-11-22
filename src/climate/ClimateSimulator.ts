@@ -9,29 +9,72 @@ export class ClimateSimulator {
 
   calculateTemperature(
     latitude: number,
+    longitude: number,
     elevation: number,
     seasonalDay: number = 0
   ): number {
     const latRad = (latitude * Math.PI) / 180;
     const tiltRad = (this.params.orbitalTilt * Math.PI) / 180;
 
-    const seasonalAngle = (seasonalDay / 365) * 2 * Math.PI;
+    // Calculate seasonal angle using orbital period
+    const seasonalAngle = (seasonalDay / this.params.orbitalPeriod) * 2 * Math.PI;
     const declination = tiltRad * Math.sin(seasonalAngle);
 
-    const solarElevationAngle = Math.asin(
-      Math.sin(latRad) * Math.sin(declination) +
-      Math.cos(latRad) * Math.cos(declination)
-    );
+    // Determine if planet is tidally locked (rotation period > 1000 hours means very slow rotation)
+    const isTidallyLocked = this.params.rotationPeriod > 1000;
 
-    const insolation = this.params.solarConstant *
-      Math.max(0, Math.sin(solarElevationAngle));
+    let insolation: number;
+
+    if (isTidallyLocked) {
+      // For tidally locked planets, temperature depends on longitude
+      // 0° longitude = subsolar point (always facing star)
+      // 180° longitude = antisolar point (always dark)
+      const subsolarLongitude = 0; // Assume 0° is the locked face
+      const angularDistance = Math.abs(longitude - subsolarLongitude);
+      const normalizedDistance = Math.min(angularDistance, 360 - angularDistance);
+
+      // Calculate insolation based on distance from subsolar point
+      const distRad = (normalizedDistance * Math.PI) / 180;
+      const latDistanceFactor = Math.cos(distRad) * Math.cos(latRad);
+
+      insolation = this.params.solarConstant * Math.max(0, latDistanceFactor);
+
+      // Add very small ambient heat from atmospheric circulation (if any atmosphere)
+      const minAmbientTemp = this.params.atmosphereDensity * 5; // Kelvin
+      insolation = Math.max(insolation, minAmbientTemp);
+    } else {
+      // For rotating planets, consider day/night cycle
+      const timeOfDay = this.params.timeOfDay || 12;
+
+      // Calculate hour angle (0 = noon, 12 = midnight)
+      const hourAngle = ((timeOfDay - 12) / 12) * Math.PI;
+
+      // Solar elevation angle considering both latitude and time of day
+      const solarElevationAngle = Math.asin(
+        Math.sin(latRad) * Math.sin(declination) +
+        Math.cos(latRad) * Math.cos(declination) * Math.cos(hourAngle)
+      );
+
+      insolation = this.params.solarConstant * Math.max(0, Math.sin(solarElevationAngle));
+
+      // For fast-rotating planets, average out day/night somewhat
+      const rotationDampening = Math.min(1, this.params.rotationPeriod / 24);
+      const nighttimeTempRetention = this.params.atmosphereDensity * 0.3 * (1 - rotationDampening);
+
+      if (insolation === 0) {
+        // Nighttime - retain some heat
+        insolation = this.params.solarConstant * nighttimeTempRetention;
+      }
+    }
 
     const baseTemp = this.insolationToTemperature(insolation);
 
+    // Elevation lapse rate
     const lapseRate = 6.5;
     const elevationKm = (elevation - this.params.seaLevel) / 1000;
     const tempAdjustment = -lapseRate * elevationKm;
 
+    // Atmospheric greenhouse effect
     const atmosphericEffect = this.params.atmosphereDensity * 15;
 
     return baseTemp + tempAdjustment + atmosphericEffect;
@@ -88,11 +131,12 @@ export class ClimateSimulator {
 
   calculateClimate(
     latitude: number,
+    longitude: number,
     elevation: number,
     distanceToOcean: number = 0,
     seasonalDay: number = 0
   ): ClimateData {
-    const temperature = this.calculateTemperature(latitude, elevation, seasonalDay);
+    const temperature = this.calculateTemperature(latitude, longitude, elevation, seasonalDay);
     const precipitation = this.calculatePrecipitation(
       latitude,
       elevation,
@@ -137,13 +181,13 @@ export class ClimateSimulator {
     return baseWind + windBoost;
   }
 
-  getAverageAnnualTemperature(latitude: number, elevation: number): number {
+  getAverageAnnualTemperature(latitude: number, longitude: number, elevation: number): number {
     let totalTemp = 0;
     const samples = 12;
 
     for (let month = 0; month < samples; month++) {
-      const day = (month * 365) / samples;
-      totalTemp += this.calculateTemperature(latitude, elevation, day);
+      const day = (month * this.params.orbitalPeriod) / samples;
+      totalTemp += this.calculateTemperature(latitude, longitude, elevation, day);
     }
 
     return totalTemp / samples;
@@ -151,6 +195,7 @@ export class ClimateSimulator {
 
   getAverageAnnualPrecipitation(
     latitude: number,
+    longitude: number,
     elevation: number,
     distanceToOcean: number = 0
   ): number {
@@ -158,8 +203,8 @@ export class ClimateSimulator {
     const samples = 12;
 
     for (let month = 0; month < samples; month++) {
-      const day = (month * 365) / samples;
-      const temp = this.calculateTemperature(latitude, elevation, day);
+      const day = (month * this.params.orbitalPeriod) / samples;
+      const temp = this.calculateTemperature(latitude, longitude, elevation, day);
       totalPrecip += this.calculatePrecipitation(latitude, elevation, temp, distanceToOcean);
     }
 

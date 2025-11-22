@@ -3,9 +3,11 @@ export interface WorldParameters {
   solarConstant: number;
   orbitalTilt: number;
   rotationPeriod: number;
+  orbitalPeriod: number;
   seaLevel: number;
   atmosphereDensity: number;
   gridResolution: number;
+  timeOfDay?: number; // Hours (0-24) for day/night simulation
 }
 
 export interface CellData {

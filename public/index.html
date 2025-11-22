@@ -353,6 +353,24 @@
                         <input type="range" id="atmosphereDensity" min="0" max="5" step="0.1" value="1.0">
                     </div>
 
+                    <div class="slider-group">
+                        <label for="rotationPeriod">Rotation Period: <span id="rotationPeriodValue">24</span> hours</label>
+                        <input type="range" id="rotationPeriod" min="1" max="2000" step="1" value="24">
+                        <small style="opacity: 0.8; display: block; margin-top: 5px;">1440+ hours = tidally locked (extreme temp differences)</small>
+                    </div>
+
+                    <div class="slider-group">
+                        <label for="orbitalPeriod">Orbital Period: <span id="orbitalPeriodValue">365</span> days</label>
+                        <input type="range" id="orbitalPeriod" min="10" max="1000" step="10" value="365">
+                        <small style="opacity: 0.8; display: block; margin-top: 5px;">Affects seasons and climate patterns</small>
+                    </div>
+
+                    <div class="slider-group">
+                        <label for="timeOfDay">Time of Day: <span id="timeOfDayValue">12</span> hours</label>
+                        <input type="range" id="timeOfDay" min="0" max="24" step="0.5" value="12">
+                        <small style="opacity: 0.8; display: block; margin-top: 5px;">Simulate day/night temperature variations</small>
+                    </div>
+
                     <div class="file-upload-group" style="margin-top: 15px;">
                         <label for="heightmapFile">Height Map (optional):</label>
                         <input type="file" id="heightmapFile" accept="image/*">

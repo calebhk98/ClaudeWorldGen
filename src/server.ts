@@ -36,6 +36,7 @@ const PRESETS: Record<string, PresetConfig> = {
       solarConstant: 1361,
       orbitalTilt: 23.5,
       rotationPeriod: 24,
+      orbitalPeriod: 365,
       seaLevel: 0.5,
       atmosphereDensity: 1.0,
       gridResolution: 3,
@@ -56,6 +57,7 @@ const PRESETS: Record<string, PresetConfig> = {
       solarConstant: 590,
       orbitalTilt: 25.2,
       rotationPeriod: 24.6,
+      orbitalPeriod: 687,
       seaLevel: 0.3,
       atmosphereDensity: 0.01,
       gridResolution: 3,
@@ -77,6 +79,7 @@ const PRESETS: Record<string, PresetConfig> = {
       solarConstant: 2601,
       orbitalTilt: 177.4,
       rotationPeriod: 2802,
+      orbitalPeriod: 225,
       seaLevel: 0.0,
       atmosphereDensity: 5.0,
       gridResolution: 2,
@@ -98,6 +101,7 @@ const PRESETS: Record<string, PresetConfig> = {
       solarConstant: 400,
       orbitalTilt: 15.0,
       rotationPeriod: 18,
+      orbitalPeriod: 500,
       seaLevel: 0.7,
       atmosphereDensity: 0.5,
       gridResolution: 2,
@@ -119,6 +123,7 @@ const PRESETS: Record<string, PresetConfig> = {
       solarConstant: 1361,
       orbitalTilt: 23.5,
       rotationPeriod: 24,
+      orbitalPeriod: 365,
       seaLevel: 0.7,
       atmosphereDensity: 1.2,
       gridResolution: 3,
@@ -158,10 +163,12 @@ app.post('/api/generate', (req, res) => {
         radius: 6371000, // Default Earth radius
         solarConstant: customParams.solarConstant || 1361,
         orbitalTilt: customParams.orbitalTilt || 23.5,
-        rotationPeriod: 24,
+        rotationPeriod: customParams.rotationPeriod || 24,
+        orbitalPeriod: customParams.orbitalPeriod || 365,
         seaLevel: customParams.seaLevel || 0.5,
         atmosphereDensity: customParams.atmosphereDensity || 1.0,
         gridResolution: customParams.gridResolution || 4,
+        timeOfDay: customParams.timeOfDay || 12,
       };
 
       noiseConfig = {
@@ -269,10 +276,12 @@ app.post('/api/generate-with-heightmap', upload.single('heightmap'), async (req,
       radius: 6371000,
       solarConstant: customParams.solarConstant || 1361,
       orbitalTilt: customParams.orbitalTilt || 23.5,
-      rotationPeriod: 24,
+      rotationPeriod: customParams.rotationPeriod || 24,
+      orbitalPeriod: customParams.orbitalPeriod || 365,
       seaLevel: customParams.seaLevel || 0.5,
       atmosphereDensity: customParams.atmosphereDensity || 1.0,
       gridResolution: customParams.gridResolution || 4,
+      timeOfDay: customParams.timeOfDay || 12,
     };
 
     // Create a custom heightmap config

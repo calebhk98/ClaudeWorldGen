@@ -248,6 +248,9 @@ async function generateWorld() {
             const solarEnergy = parseFloat(document.getElementById('solarEnergy').value);
             const quality = parseInt(document.getElementById('quality').value);
             const atmosphereDensity = parseFloat(document.getElementById('atmosphereDensity').value);
+            const rotationPeriod = parseFloat(document.getElementById('rotationPeriod').value);
+            const orbitalPeriod = parseFloat(document.getElementById('orbitalPeriod').value);
+            const timeOfDay = parseFloat(document.getElementById('timeOfDay').value);
 
             requestBody = {
                 presetId: 'custom',
@@ -256,7 +259,10 @@ async function generateWorld() {
                     orbitalTilt: axialTilt,
                     solarConstant: solarEnergy,
                     gridResolution: quality,
-                    atmosphereDensity
+                    atmosphereDensity,
+                    rotationPeriod,
+                    orbitalPeriod,
+                    timeOfDay
                 }
             };
 
@@ -368,7 +374,10 @@ function setupSliderListeners() {
         { id: 'axialTilt', valueId: 'axialTiltValue', format: (v) => v },
         { id: 'solarEnergy', valueId: 'solarEnergyValue', format: (v) => v },
         { id: 'quality', valueId: 'qualityValue', format: (v) => v },
-        { id: 'atmosphereDensity', valueId: 'atmosphereDensityValue', format: (v) => v }
+        { id: 'atmosphereDensity', valueId: 'atmosphereDensityValue', format: (v) => v },
+        { id: 'rotationPeriod', valueId: 'rotationPeriodValue', format: (v) => v },
+        { id: 'orbitalPeriod', valueId: 'orbitalPeriodValue', format: (v) => v },
+        { id: 'timeOfDay', valueId: 'timeOfDayValue', format: (v) => v }
     ];
 
     sliders.forEach(({ id, valueId, format }) => {
