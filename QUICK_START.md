@@ -11,7 +11,7 @@ npm start
 
 ## What Happens Next?
 
-You'll see an interactive menu:
+**Your browser will automatically open** to http://localhost:3000 and you'll see the visual world simulator interface:
 
 ```
 ╔════════════════════════════════════════════╗
