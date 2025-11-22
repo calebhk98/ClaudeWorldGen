@@ -11,7 +11,7 @@ npm install
 npm start
 ```
 
-That's it! Open your browser to **http://localhost:3000** and you'll see a beautiful visual interface where you can generate and view different planets!
+That's it! **Your browser will automatically open** to http://localhost:3000 with a beautiful visual interface where you can generate and view different planets!
 
 ### Visual Interface
 
