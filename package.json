@@ -4,10 +4,17 @@
   "description": "A physics-based world simulator with climate and biome generation",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "world-simulator": "./dist/cli.js"
+  },
   "scripts": {
     "build": "tsc",
-    "start": "node dist/examples/basic.js",
-    "dev": "ts-node src/examples/basic.ts",
+    "start": "npm run build && node dist/cli.js",
+    "sim": "npm run build && node dist/cli.js",
+    "dev": "ts-node src/cli.ts",
+    "example:basic": "npm run build && node dist/examples/basic.js",
+    "example:custom": "npm run build && node dist/examples/custom-planet.js",
+    "example:heightmap": "npm run build && node dist/examples/heightmap-import.js",
     "test": "jest"
   },
   "keywords": [
