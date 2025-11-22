@@ -2,6 +2,17 @@
 
 A physics-based world simulator that generates realistic climate biomes based on planetary parameters. Supports both procedural generation using noise algorithms and importing real-world height map data (such as NASA SRTM data).
 
+## 🚀 Quick Start (4 Commands)
+
+```bash
+git clone https://github.com/calebhk98/ClaudeWorldGen.git
+cd ClaudeWorldGen
+npm install
+npm start
+```
+
+That's it! The interactive CLI will guide you through creating Earth-like, Mars-like, Venus-like, or custom planets.
+
 ## Features
 
 - 🌍 **Spherical Grid System**: Uses H3 hexagonal hierarchical geospatial indexing for accurate planetary representation
@@ -15,14 +26,18 @@ A physics-based world simulator that generates realistic climate biomes based on
 - 🌲 **Biome Classification**: Whittaker-inspired biome system with 12 distinct biome types
 - 🪐 **Custom Planets**: Simulate Earth-like, Mars-like, Venus-like, or completely custom worlds
 - 📈 **Statistics & Export**: Generate world statistics and export to GeoJSON format
+- 🎮 **Interactive CLI**: User-friendly command-line interface with preset configurations
+- 📦 **Library API**: Use as a library in your own TypeScript/JavaScript projects
 
-## Installation
+## Using as a Library
+
+Install in your project:
 
 ```bash
-npm install
+npm install claude-world-simulator
 ```
 
-## Quick Start
+Use in your code:
 
 ```typescript
 import { WorldSimulator } from './src/WorldSimulator';
@@ -104,31 +119,45 @@ const geojson = simulator.exportToGeoJSON();
    - Integrates all components
    - Provides statistics and export functionality
 
-## Examples
+## Running the Simulator
 
-### Basic Earth-like World
-
-```bash
-npm run dev
-```
-
-Runs `src/examples/basic.ts` which generates an Earth-like world and displays statistics.
-
-### Custom Planets
+### Interactive CLI (Recommended)
 
 ```bash
-npx ts-node src/examples/custom-planet.ts
+npm start
 ```
 
-Demonstrates creating Mars-like, Venus-like, and ice planets with different parameters.
+The interactive mode presents a menu of planet presets:
+- **Earth-like** - Standard Earth with realistic climate
+- **Mars-like** - Cold, dry planet with thin atmosphere
+- **Venus-like** - Hot planet with thick atmosphere
+- **Ice Planet** - Frozen world with distant star
+- **Ocean World** - Water-covered planet with archipelagos
 
-### Height Map Import
+### Command Line Arguments
 
 ```bash
-npx ts-node src/examples/heightmap-import.ts
+# Run specific preset directly
+npm start -- --preset 1    # Earth-like
+npm start -- --preset 2    # Mars-like
+npm start -- --preset 3    # Venus-like
+npm start -- --preset 4    # Ice Planet
+npm start -- --preset 5    # Ocean World
+
+# Show help
+npm start -- --help
+
+# Show version
+npm start -- --version
 ```
 
-Shows how to import external height map data (e.g., from NASA).
+### Example Scripts
+
+```bash
+npm run example:basic       # Basic Earth-like example
+npm run example:custom      # Custom planets (Mars, Venus, Ice)
+npm run example:heightmap   # Height map import example
+```
 
 ## Using NASA Height Map Data
 
