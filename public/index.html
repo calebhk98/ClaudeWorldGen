@@ -221,6 +221,81 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .control-group {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        .slider-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+
+        .slider-group input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            border: none;
+        }
+
+        .file-upload-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .file-upload-group input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .file-upload-group input[type="file"]::file-selector-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .file-upload-group input[type="file"]::file-selector-button:hover {
+            background: #45a049;
+        }
     </style>
 </head>
 <body>
@@ -239,8 +314,51 @@
                     <option value="3">Venus-like - Hot and thick</option>
                     <option value="4">Ice Planet - Frozen world</option>
                     <option value="5">Ocean World - Water-covered</option>
+                    <option value="custom">Custom - Manual settings</option>
                 </select>
                 <button id="generateBtn">Generate World</button>
+                <label style="margin-left: 20px;">
+                    <input type="checkbox" id="showWindToggle">
+                    Show Wind
+                </label>
+            </div>
+
+            <div id="customControls" style="display: none; margin-top: 20px;">
+                <div class="control-group">
+                    <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Custom Parameters</h3>
+
+                    <div class="slider-group">
+                        <label for="seaLevel">Sea Level: <span id="seaLevelValue">0.3</span></label>
+                        <input type="range" id="seaLevel" min="0" max="1" step="0.05" value="0.3">
+                    </div>
+
+                    <div class="slider-group">
+                        <label for="axialTilt">Axial Tilt: <span id="axialTiltValue">23.5</span>°</label>
+                        <input type="range" id="axialTilt" min="0" max="90" step="0.5" value="23.5">
+                    </div>
+
+                    <div class="slider-group">
+                        <label for="solarEnergy">Solar Energy: <span id="solarEnergyValue">1361</span> W/m²</label>
+                        <input type="range" id="solarEnergy" min="200" max="3000" step="50" value="1361">
+                    </div>
+
+                    <div class="slider-group">
+                        <label for="quality">Quality/Resolution: <span id="qualityValue">4</span></label>
+                        <input type="range" id="quality" min="2" max="6" step="1" value="4">
+                        <small style="opacity: 0.8; display: block; margin-top: 5px;">Higher = more detail (slower)</small>
+                    </div>
+
+                    <div class="slider-group">
+                        <label for="atmosphereDensity">Atmosphere Density: <span id="atmosphereDensityValue">1.0</span></label>
+                        <input type="range" id="atmosphereDensity" min="0" max="5" step="0.1" value="1.0">
+                    </div>
+
+                    <div class="file-upload-group" style="margin-top: 15px;">
+                        <label for="heightmapFile">Height Map (optional):</label>
+                        <input type="file" id="heightmapFile" accept="image/*">
+                        <small style="opacity: 0.8; display: block; margin-top: 5px;">Upload a grayscale heightmap (NASA, etc.)</small>
+                    </div>
+                </div>
             </div>
         </div>
 

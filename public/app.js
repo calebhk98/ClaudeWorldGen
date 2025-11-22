@@ -5,20 +5,21 @@ const presetSelect = document.getElementById('preset');
 const loadingState = document.getElementById('loadingState');
 const infoContent = document.getElementById('infoContent');
 const hoverInfo = document.getElementById('hoverInfo');
+const showWindToggle = document.getElementById('showWindToggle');
 
 const BIOME_COLORS = {
-    'Ocean': '#1e3a8a',
-    'Ice': '#f0f9ff',
-    'Tundra': '#bae6fd',
-    'Taiga': '#10b981',
-    'Temperate Forest': '#22c55e',
-    'Temperate Grassland': '#84cc16',
-    'Desert': '#fbbf24',
-    'Savanna': '#bef264',
-    'Tropical Rainforest': '#065f46',
-    'Tropical Seasonal Forest': '#16a34a',
-    'Alpine': '#94a3b8',
-    'Subtropical Desert': '#f59e0b',
+    'Ocean': '#1e40af',              // Deep blue
+    'Ice': '#e0f2fe',                // Very light blue/white
+    'Tundra': '#67e8f9',             // Bright cyan
+    'Taiga': '#10b981',              // Emerald green
+    'Temperate Forest': '#22c55e',   // Green
+    'Temperate Grassland': '#a3e635', // Lime green
+    'Desert': '#fbbf24',             // Amber
+    'Savanna': '#d9f99d',            // Light lime
+    'Tropical Rainforest': '#15803d', // Dark green
+    'Tropical Seasonal Forest': '#22c55e', // Green
+    'Alpine': '#cbd5e1',             // Light gray
+    'Subtropical Desert': '#f59e0b', // Orange
 };
 
 let worldData = null;
@@ -57,12 +58,19 @@ function renderWorld(data) {
     const width = canvas.width;
     const height = canvas.height;
 
-    // Clear canvas
-    ctx.fillStyle = '#000';
+    // Clear canvas with ocean color as base
+    ctx.fillStyle = '#0c4a6e';
     ctx.fillRect(0, 0, width, height);
 
-    // Create a grid to accumulate cells
-    const gridSize = 2; // Size of each pixel square
+    // Dynamically calculate grid size based on number of cells
+    // More cells = smaller grid size, fewer cells = larger grid size
+    const cellCount = data.cells.length;
+    let gridSize = 4; // Default size
+    if (cellCount < 1000) gridSize = 8;
+    else if (cellCount < 3000) gridSize = 6;
+    else if (cellCount < 10000) gridSize = 4;
+    else gridSize = 3;
+
     const gridWidth = Math.ceil(width / gridSize);
     const gridHeight = Math.ceil(height / gridSize);
     const grid = Array(gridHeight).fill(null).map(() => Array(gridWidth).fill(null));
@@ -81,7 +89,7 @@ function renderWorld(data) {
         }
     }
 
-    // Render grid
+    // Render grid with better visibility
     for (let y = 0; y < gridHeight; y++) {
         for (let x = 0; x < gridWidth; x++) {
             if (grid[y][x] && grid[y][x].length > 0) {
@@ -122,7 +130,63 @@ function renderWorld(data) {
         ctx.stroke();
     }
 
+    // Draw wind visualization if enabled
+    if (showWindToggle.checked) {
+        drawWindArrows(data, width, height);
+    }
+
     worldData = data;
+}
+
+function drawWindArrows(data, width, height) {
+    const spacing = 50; // Pixels between arrows
+    const arrowLength = 15;
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.lineWidth = 2;
+
+    for (let y = spacing / 2; y < height; y += spacing) {
+        for (let x = spacing / 2; x < width; x += spacing) {
+            const latLng = pixelToLatLng(x, y, width, height);
+            const cell = findNearestCell(latLng.lat, latLng.lng, data.cells);
+
+            if (cell && cell.windSpeed && cell.windDirection !== undefined) {
+                // Scale arrow length by wind speed
+                const scaledLength = Math.min(arrowLength * (cell.windSpeed / 10), arrowLength * 1.5);
+
+                // Convert wind direction to radians (wind direction is where wind is going TO)
+                const dirRad = (cell.windDirection * Math.PI) / 180;
+
+                // Calculate arrow end point
+                const endX = x + Math.sin(dirRad) * scaledLength;
+                const endY = y - Math.cos(dirRad) * scaledLength;
+
+                // Draw arrow shaft
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+
+                // Draw arrowhead
+                const headLength = 5;
+                const headAngle = Math.PI / 6; // 30 degrees
+
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(
+                    endX - headLength * Math.sin(dirRad - headAngle),
+                    endY + headLength * Math.cos(dirRad - headAngle)
+                );
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(
+                    endX - headLength * Math.sin(dirRad + headAngle),
+                    endY + headLength * Math.cos(dirRad + headAngle)
+                );
+                ctx.stroke();
+            }
+        }
+    }
 }
 
 function updateStatistics(data) {
@@ -175,12 +239,61 @@ async function generateWorld() {
     infoContent.style.display = 'none';
 
     try {
+        let requestBody = {};
+
+        if (presetId === 'custom') {
+            // Get custom parameters
+            const seaLevel = parseFloat(document.getElementById('seaLevel').value);
+            const axialTilt = parseFloat(document.getElementById('axialTilt').value);
+            const solarEnergy = parseFloat(document.getElementById('solarEnergy').value);
+            const quality = parseInt(document.getElementById('quality').value);
+            const atmosphereDensity = parseFloat(document.getElementById('atmosphereDensity').value);
+
+            requestBody = {
+                presetId: 'custom',
+                customParams: {
+                    seaLevel,
+                    orbitalTilt: axialTilt,
+                    solarConstant: solarEnergy,
+                    gridResolution: quality,
+                    atmosphereDensity
+                }
+            };
+
+            // Check if heightmap file is uploaded
+            const heightmapFile = document.getElementById('heightmapFile').files[0];
+            if (heightmapFile) {
+                const formData = new FormData();
+                formData.append('heightmap', heightmapFile);
+                formData.append('params', JSON.stringify(requestBody));
+
+                const response = await fetch('http://localhost:3000/api/generate-with-heightmap', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate world with heightmap');
+                }
+
+                const data = await response.json();
+                renderWorld(data);
+                updateStatistics(data);
+                loadingState.style.display = 'none';
+                infoContent.style.display = 'block';
+                generateBtn.disabled = false;
+                return;
+            }
+        } else {
+            requestBody = { presetId };
+        }
+
         const response = await fetch('http://localhost:3000/api/generate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ presetId }),
+            body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {
@@ -218,12 +331,16 @@ canvas.addEventListener('mousemove', (e) => {
 
     if (cell) {
         hoverInfo.style.display = 'block';
+        const windInfo = cell.windSpeed !== undefined && cell.windDirection !== undefined
+            ? `<p><strong>Wind:</strong> ${cell.windSpeed.toFixed(1)} m/s, ${cell.windDirection.toFixed(0)}°</p>`
+            : '';
         hoverInfo.innerHTML = `
             <p><strong>Location:</strong> ${cell.lat.toFixed(2)}°, ${cell.lng.toFixed(2)}°</p>
             <p><strong>Biome:</strong> ${cell.biome}</p>
             <p><strong>Elevation:</strong> ${(cell.elevation * 10000).toFixed(0)} m</p>
             <p><strong>Temperature:</strong> ${cell.temperature.toFixed(1)}°C</p>
             <p><strong>Precipitation:</strong> ${cell.precipitation.toFixed(0)} mm/year</p>
+            ${windInfo}
         `;
     }
 });
@@ -233,6 +350,46 @@ canvas.addEventListener('mouseleave', () => {
 });
 
 generateBtn.addEventListener('click', generateWorld);
+
+// Show/hide custom controls based on preset selection
+presetSelect.addEventListener('change', () => {
+    const customControls = document.getElementById('customControls');
+    if (presetSelect.value === 'custom') {
+        customControls.style.display = 'block';
+    } else {
+        customControls.style.display = 'none';
+    }
+});
+
+// Update slider value displays
+function setupSliderListeners() {
+    const sliders = [
+        { id: 'seaLevel', valueId: 'seaLevelValue', format: (v) => v },
+        { id: 'axialTilt', valueId: 'axialTiltValue', format: (v) => v },
+        { id: 'solarEnergy', valueId: 'solarEnergyValue', format: (v) => v },
+        { id: 'quality', valueId: 'qualityValue', format: (v) => v },
+        { id: 'atmosphereDensity', valueId: 'atmosphereDensityValue', format: (v) => v }
+    ];
+
+    sliders.forEach(({ id, valueId, format }) => {
+        const slider = document.getElementById(id);
+        const valueDisplay = document.getElementById(valueId);
+
+        slider.addEventListener('input', () => {
+            valueDisplay.textContent = format(slider.value);
+        });
+    });
+}
+
+// Initialize slider listeners
+setupSliderListeners();
+
+// Wind toggle listener
+showWindToggle.addEventListener('change', () => {
+    if (worldData) {
+        renderWorld(worldData);
+    }
+});
 
 // Generate default world on load
 window.addEventListener('load', () => {

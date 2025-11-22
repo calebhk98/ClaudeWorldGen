@@ -92,10 +92,31 @@ export class WorldSimulator {
         precipitation: climate.precipitation,
         biome,
         isOcean,
+        windSpeed: climate.windSpeed,
+        windDirection: this.calculateWindDirection(cell.latitude),
       });
     }
 
     console.log('World generation complete!');
+  }
+
+  private calculateWindDirection(latitude: number): number {
+    // Simplified atmospheric circulation model
+    // Returns direction in degrees (0-360, where 0 is North, 90 is East)
+    const absLat = Math.abs(latitude);
+
+    // Trade winds (0-30°): East to West (270°)
+    if (absLat < 30) {
+      return latitude >= 0 ? 270 : 270; // Easterly
+    }
+    // Westerlies (30-60°): West to East (90°)
+    else if (absLat < 60) {
+      return latitude >= 0 ? 90 : 90; // Westerly
+    }
+    // Polar easterlies (60-90°): East to West (270°)
+    else {
+      return latitude >= 0 ? 270 : 270; // Easterly
+    }
   }
 
   private estimateDistanceToOcean(cellId: string, allCells: any[]): number {

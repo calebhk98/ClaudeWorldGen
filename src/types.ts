@@ -17,6 +17,8 @@ export interface CellData {
   precipitation: number;
   biome: BiomeType;
   isOcean: boolean;
+  windSpeed?: number;
+  windDirection?: number;
 }
 
 export enum BiomeType {
