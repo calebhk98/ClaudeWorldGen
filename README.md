@@ -11,7 +11,23 @@ npm install
 npm start
 ```
 
-That's it! The interactive CLI will guide you through creating Earth-like, Mars-like, Venus-like, or custom planets.
+That's it! Open your browser to **http://localhost:3000** and you'll see a beautiful visual interface where you can generate and view different planets!
+
+### Visual Interface
+
+The web viewer includes:
+- 🗺️ **Interactive World Map** - See your generated world in full color
+- 🎨 **Biome Visualization** - Each biome type rendered with realistic colors
+- 📊 **Live Statistics** - Real-time stats on climate and distribution
+- 🖱️ **Hover Details** - Mouse over any location to see detailed climate data
+- 🪐 **5 Planet Presets** - Earth, Mars, Venus, Ice Planet, and Ocean World
+
+### Command-Line Interface
+
+If you prefer the terminal, run:
+```bash
+npm run cli
+```
 
 ## Features
 
